@@ -1,2 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
-<items version="2" />
+<items version="2" >
+
+    <item
+        jar="/Users/jakubkopec/.gradle/caches/modules-2/files-2.1/com.loopj.android/android-async-http/1.4.9/386a4339ffe52d5d63e80f9bed8d2b1d1a418249/android-async-http-1.4.9.jar"
+        jumboMode="false"
+        revision="23.0.3"
+        sha1="386a4339ffe52d5d63e80f9bed8d2b1d1a418249">
+        <dex dex="/Users/jakubkopec/GitHub/DEZSYS11/app/build/intermediates/pre-dexed/debug/android-async-http-1.4.9_d7b7aba1105d2cc43b5d00381d920ee74e5abebb.jar" />
+    </item>
+    <item
+        jar="/Users/jakubkopec/.gradle/caches/modules-2/files-2.1/cz.msebera.android/httpclient/4.3.6/526a9f794eab830eae4f23a62c572878b3f491ab/httpclient-4.3.6.jar"
+        jumboMode="false"
+        revision="23.0.3"
+        sha1="526a9f794eab830eae4f23a62c572878b3f491ab">
+        <dex dex="/Users/jakubkopec/GitHub/DEZSYS11/app/build/intermediates/pre-dexed/debug/httpclient-4.3.6_6938ea469a03abfad0643da6968dd347fd776415.jar" />
+    </item>
+
+</items>
