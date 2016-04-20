@@ -1,6 +1,10 @@
 package com.jkopec.dezsys11;
 
 import android.support.v7.app.AppCompatActivity;
+import com.loopj.android.http.TextHttpResponseHandler;
+import cz.msebera.android.httpclient.entity.StringEntity;
+import cz.msebera.android.httpclient.message.BasicHeader;
+import cz.msebera.android.httpclient.protocol.HTTP;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -17,6 +21,9 @@ import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.loopj.android.http.RequestParams;
 
 import cz.msebera.android.httpclient.Header;
+
+import java.io.UnsupportedEncodingException;
+
 /**
  *
  * Login Activity Class
@@ -60,23 +67,29 @@ public class LoginActivity extends AppCompatActivity {
         // Get Password Edit View Value
         String password = pwdET.getText().toString();
         // Instantiate Http Request Param Object
-        RequestParams params = new RequestParams();
+        JSONObject params = new JSONObject();
         // When Email Edit View and Password Edit View have values other than Null
         if(Utility.isNotNull(email) && Utility.isNotNull(password)){
             // When Email entered is Valid
             if(Utility.validate(email)){
-                // Put Http parameter username with value of Email Edit View control
-                params.put("username", email);
-                // Put Http parameter password with value of Password Edit Value control
-                params.put("password", password);
-                // Invoke RESTful Web Service with Http parameters
-                invokeWS(params);
+                try {
+                    // Put Http parameter username with value of Email Edit View control
+                    params.put("email", email);
+                    // Put Http parameter password with value of Password Edit Value control
+                    params.put("password", password);
+                    // Invoke RESTful Web Service with Http parameters
+                    invokeWS(params);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
             }
             // When Email is invalid
             else{
                 Toast.makeText(getApplicationContext(), "Please enter valid email", Toast.LENGTH_LONG).show();
             }
-        } else{
+        }
+        // When any of the Edit View control left blank
+        else{
             Toast.makeText(getApplicationContext(), "Please fill the form, don't leave any field blank", Toast.LENGTH_LONG).show();
         }
 
@@ -87,59 +100,47 @@ public class LoginActivity extends AppCompatActivity {
      *
      * @param params
      */
-    public void invokeWS(RequestParams params){
+    public void invokeWS(JSONObject params){
         // Show Progress Dialog
         prgDialog.show();
         // Make RESTful webservice call using AsyncHttpClient object
         AsyncHttpClient client = new AsyncHttpClient();
-        client.get("http://192.168.2.2:9999/useraccount/login/dologin",params ,new AsyncHttpResponseHandler() {
-
+        StringEntity request = null;
+        try {
+            request = new StringEntity(params.toString());
+            request.setContentType(new BasicHeader(HTTP.CONTENT_TYPE, "application/json"));
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+        client.post(this.getApplicationContext(), "http://10.0.2.2:8080/login", request, "application/json", new TextHttpResponseHandler() {
             // When the response returned by REST has Http response code '200'
-            @Override
-            public void onSuccess(int i, Header[] headers, byte[] bytes) {
-                String response = new String(bytes);
-                // Hide Progress Dialog
-                prgDialog.hide();
-                try {
-                    // JSON Object
-                    JSONObject obj = new JSONObject(response);
-                    // When the JSON response has status boolean value assigned with true
-                    if(obj.getBoolean("status")){
-                        Toast.makeText(getApplicationContext(), "You are successfully logged in!", Toast.LENGTH_LONG).show();
-                        // Navigate to Home screen
-                        navigatetoHomeActivity();
-                    }
-                    // Else display error message
-                    else{
-                        errorMsg.setText(obj.getString("error_msg"));
-                        Toast.makeText(getApplicationContext(), obj.getString("error_msg"), Toast.LENGTH_LONG).show();
-                    }
-                } catch (JSONException e) {
-                    // TODO Auto-generated catch block
-                    Toast.makeText(getApplicationContext(), "Error Occured [Server's JSON response might be invalid]!", Toast.LENGTH_LONG).show();
-                    e.printStackTrace();
-
-                }
-            }
 
             // When the response returned by REST has Http response code other than '200'
             @Override
-            public void onFailure(int statusCode, cz.msebera.android.httpclient.Header[] headers, byte[] bytes, Throwable error) {
-                String content = new String(bytes);
+            public void onFailure(int statusCode, Header[] headers, String responseBody, Throwable error) {
                 // Hide Progress Dialog
                 prgDialog.hide();
-                // When Http response code is '404'
-                if(statusCode == 404){
-                    Toast.makeText(getApplicationContext(), "Requested resource not found", Toast.LENGTH_LONG).show();
+                // When Http response code is '403'
+                if(statusCode == 403){
+                    Toast.makeText(getApplicationContext(), responseBody, Toast.LENGTH_LONG).show();
                 }
-                // When Http response code is '500'
-                else if(statusCode == 500){
-                    Toast.makeText(getApplicationContext(), "Something went wrong at server end", Toast.LENGTH_LONG).show();
-                }
-                // When Http response code other than 404, 500
+                // When Http response code other than 403
                 else{
                     Toast.makeText(getApplicationContext(), "Unexpected Error occcured! [Most common Error: Device might not be connected to Internet or remote server is not up and running]", Toast.LENGTH_LONG).show();
                 }
+            }
+
+            @Override
+            public void onSuccess(int statusCode, Header[] headers, String responseBody) {
+                prgDialog.hide();
+                // When Http response code is '200'
+                if(statusCode == 200) {
+                    Toast.makeText(getApplicationContext(), responseBody, Toast.LENGTH_LONG).show();
+
+                    // Navigate to Home screen
+                    navigatetoHomeActivity(responseBody);
+                }
+
             }
         });
     }
@@ -147,9 +148,10 @@ public class LoginActivity extends AppCompatActivity {
     /**
      * Method which navigates from Login Activity to Home Activity
      */
-    public void navigatetoHomeActivity(){
+    public void navigatetoHomeActivity(String response){
         Intent homeIntent = new Intent(getApplicationContext(),HomeActivity.class);
         homeIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        homeIntent.putExtra("welcome_text", response);
         startActivity(homeIntent);
     }
 

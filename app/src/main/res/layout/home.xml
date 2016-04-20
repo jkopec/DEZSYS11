@@ -8,6 +8,7 @@
              tools:ignore="MergeRootFrame" >
 
     <TextView
+            android:id="@+id/welcome_text"
             android:layout_width="fill_parent"
             android:layout_height="fill_parent"
             android:layout_gravity="fill_vertical"
